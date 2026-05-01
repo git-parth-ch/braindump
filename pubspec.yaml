@@ -1,0 +1,53 @@
+name: brain_dump
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  path: ^1.9.0
+  intl: ^0.20.2
+  provider: ^6.1.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  local_auth: ^3.0.1
+  speech_to_text: ^7.0.0
+  image_picker: ^1.1.2
+  flutter_animate: ^4.5.2
+  uuid: ^4.5.1
+  path_provider: ^2.1.5
+  record: ^6.2.0
+  audioplayers: ^6.6.0
+  flutter_quill: ^11.5.0
+  home_widget: ^0.9.1
+  quick_actions: ^1.1.0
+  share_plus: ^12.0.2
+  pdf: ^3.12.0
+  printing: ^5.14.3
+  camera: ^0.12.0+1
+  permission_handler: ^12.0.1
+  google_fonts: ^6.2.1
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/icon.png"
+  min_sdk_android: 21
