@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   final _searchController = TextEditingController();
+  final _quickInputController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -112,9 +113,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
               RetroInput(
-                controller: _searchController,
+                controller: _quickInputController,
                 hint: 'type your messy thoughts here...',
-                onChanged: (val) => noteProvider.setSearchQuery(val),
+                onChanged: (val) {},
               ),
               const SizedBox(height: 12),
               Align(
@@ -122,7 +123,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: PixelButton(
                   text: 'ENTER',
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NoteEditor()));
+                    final text = _quickInputController.text.trim();
+                    if (text.isNotEmpty) {
+                      final newNote = Note(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        title: 'QUICK DUMP',
+                        content: '[{"insert":"${text.replaceAll('"', '\\"')}\\n"}]',
+                        dateTime: DateTime.now(),
+                        color: const Color(0xFF00FF41),
+                      );
+                      noteProvider.addNote(newNote);
+                      _quickInputController.clear();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Note saved to SYSTEM!', style: GoogleFonts.vt323(color: const Color(0xFF00FF41), fontSize: 18)),
+                          backgroundColor: Colors.black,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    } else {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const NoteEditor()));
+                    }
                   },
                 ),
               ),

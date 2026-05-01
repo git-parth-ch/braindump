@@ -28,6 +28,48 @@ class NoteCard extends StatelessWidget {
     }
   }
 
+  void _showQuickOptions(BuildContext context, NoteProvider noteProvider) {
+    final isRetro = noteProvider.isRetroTheme;
+    final color = isRetro ? const Color(0xFF00FF41) : Colors.white;
+    final bgColor = isRetro ? Colors.black : const Color(0xFF16162A);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bgColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isRetro) const Divider(color: Color(0xFF00FF41), thickness: 2),
+              ListTile(
+                leading: Icon(note.isPinned ? Icons.push_pin : Icons.push_pin_outlined, color: color),
+                title: Text(note.isPinned ? 'Unpin Note' : 'Pin Note', 
+                    style: isRetro ? GoogleFonts.vt323(color: color, fontSize: 18) : TextStyle(color: color)),
+                onTap: () {
+                  note.isPinned = !note.isPinned;
+                  noteProvider.updateNote(note);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                title: Text('Delete Note', 
+                    style: isRetro ? GoogleFonts.vt323(color: Colors.redAccent, fontSize: 18) : const TextStyle(color: Colors.redAccent)),
+                onTap: () {
+                  noteProvider.deleteNote(note.id);
+                  Navigator.pop(context);
+                },
+              ),
+              if (isRetro) const Divider(color: Color(0xFF00FF41), thickness: 2),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final noteProvider = Provider.of<NoteProvider>(context);
@@ -35,11 +77,12 @@ class NoteCard extends StatelessWidget {
     final retroColor = const Color(0xFF00FF41);
 
     if (isRetro) {
-      return _buildRetroCard(retroColor);
+      return _buildRetroCard(retroColor, context, noteProvider);
     }
 
     return GestureDetector(
       onTap: onTap,
+      onLongPress: () => _showQuickOptions(context, noteProvider),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -136,9 +179,10 @@ class NoteCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRetroCard(Color color) {
+  Widget _buildRetroCard(Color color, BuildContext context, NoteProvider noteProvider) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: () => _showQuickOptions(context, noteProvider),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(

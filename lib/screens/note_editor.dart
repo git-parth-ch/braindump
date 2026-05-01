@@ -39,6 +39,7 @@ class _NoteEditorState extends State<NoteEditor> {
   Timer? _autoSaveTimer;
   final _uuid = const Uuid();
   bool _isFocusMode = false;
+  bool _isDeleted = false;
 
   late quill.QuillController _quillController;
   final _audioRecorder = AudioRecorder();
@@ -221,6 +222,8 @@ class _NoteEditorState extends State<NoteEditor> {
   }
 
   void _saveNote(NoteProvider noteProvider, {bool isExiting = false}) {
+    if (_isDeleted) return;
+    
     final hasContent = _titleController.text.trim().isNotEmpty || 
                       _quillController.document.toPlainText().trim().isNotEmpty || 
                       _imagePaths.isNotEmpty || 
@@ -284,18 +287,29 @@ class _NoteEditorState extends State<NoteEditor> {
     final noteProvider = Provider.of<NoteProvider>(context);
     final isRetro = noteProvider.isRetroTheme;
 
-    if (isRetro) {
-      return _buildRetroEditor(context);
-    }
+    Widget child = isRetro ? _buildRetroEditor(context) : _buildModernEditor(context, noteProvider);
 
     return PopScope(
-      canPop: true,
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
+        if (didPop) return;
+        
+        if (MediaQuery.of(context).viewInsets.bottom > 0) {
+          FocusScope.of(context).unfocus();
+        } else {
           _saveNote(noteProvider, isExiting: true);
+          Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildModernEditor(BuildContext context, NoteProvider noteProvider) {
+    return Scaffold(
         backgroundColor: const Color(0xFF0F0F1E),
         appBar: _isFocusMode ? null : AppBar(
           backgroundColor: Colors.transparent,
@@ -372,6 +386,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                   onPressed: () {
+                    _isDeleted = true;
                     Provider.of<NoteProvider>(context, listen: false).deleteNote(_currentNote!.id);
                     Navigator.of(context).pop();
                   },
@@ -562,7 +577,6 @@ class _NoteEditorState extends State<NoteEditor> {
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -708,6 +722,12 @@ class _NoteEditorState extends State<NoteEditor> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   PixelButton(text: 'SAVE', onTap: () => _saveNote(noteProvider), color: color),
+                  if (_currentNote != null)
+                    PixelButton(text: 'DEL', onTap: () {
+                      _isDeleted = true;
+                      noteProvider.deleteNote(_currentNote!.id);
+                      Navigator.of(context).pop();
+                    }, color: Colors.redAccent),
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
