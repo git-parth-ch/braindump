@@ -128,24 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                '--- MAIN_FEATURES.EXE ---',
+                '--- SAVED_FILES.LOG ---',
                 style: GoogleFonts.vt323(color: const Color(0xFF00FF41), fontSize: 18),
               ),
               const SizedBox(height: 12),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.5,
-                  children: [
-                    _buildRetroFeatureCard('QUICK_DUMP', Icons.flash_on),
-                    _buildRetroFeatureCard('TASKS.EXE', Icons.check_box),
-                    _buildRetroFeatureCard('IDEAS/', Icons.lightbulb),
-                    _buildRetroFeatureCard('FOCUS.MODE', Icons.visibility_off),
-                  ],
-                ),
-              ),
+              _buildNoteGrid(noteProvider),
               const SizedBox(height: 16),
               Text(
                 'STATUS: PROCESSING CHAOS...',
@@ -158,14 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRetroFeatureCard(String title, IconData icon) {
-    return PixelCard(
-      label: title,
-      child: Center(
-        child: Icon(icon, color: const Color(0xFF00FF41), size: 30),
-      ),
-    );
-  }
+
 
   Widget _buildHeader(BuildContext context) {
     return Padding(

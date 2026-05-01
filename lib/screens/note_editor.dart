@@ -598,6 +598,97 @@ class _NoteEditorState extends State<NoteEditor> {
                 ),
               ),
               const SizedBox(height: 12),
+              if (_imagePaths.isNotEmpty)
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _imagePaths.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(color.withOpacity(0.5), BlendMode.color),
+                          child: Container(
+                            decoration: BoxDecoration(border: Border.all(color: color)),
+                            child: Image.file(File(_imagePaths[index]), height: 100, width: 100, fit: BoxFit.cover),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              if (_checklists.isNotEmpty)
+                Column(
+                  children: _checklists.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    ChecklistItem item = entry.value;
+                    return Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() => item.isDone = !item.isDone);
+                            _onChanged();
+                          },
+                          child: Text(item.isDone ? '[X]' : '[ ]', style: GoogleFonts.vt323(color: color, fontSize: 18)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: TextEditingController(text: item.title)..selection = TextSelection.collapsed(offset: item.title.length),
+                            style: GoogleFonts.vt323(
+                              color: color,
+                              fontSize: 18,
+                              decoration: item.isDone ? TextDecoration.lineThrough : null,
+                            ),
+                            onChanged: (val) {
+                              item.title = val;
+                              _onChanged();
+                            },
+                            decoration: const InputDecoration(border: InputBorder.none),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, size: 16, color: color),
+                          onPressed: () {
+                            setState(() => _checklists.removeAt(idx));
+                            _onChanged();
+                          },
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              if (_audioPath != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  decoration: BoxDecoration(border: Border.all(color: color)),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, color: color),
+                        onPressed: _toggleAudio,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _audioPosition.inMilliseconds.toDouble(),
+                          max: _audioDuration.inMilliseconds.toDouble() > 0 ? _audioDuration.inMilliseconds.toDouble() : 1.0,
+                          onChanged: (value) => _audioPlayer.seek(Duration(milliseconds: value.toInt())),
+                          activeColor: color,
+                          inactiveColor: color.withOpacity(0.3),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: color, size: 20),
+                        onPressed: () {
+                          setState(() => _audioPath = null);
+                          _onChanged();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: quill.QuillEditor(
                   controller: _quillController,
@@ -617,17 +708,37 @@ class _NoteEditorState extends State<NoteEditor> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   PixelButton(text: 'SAVE', onTap: () => _saveNote(noteProvider), color: color),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.image, color: color),
-                        onPressed: _pickImage,
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          IconButton(icon: Icon(Icons.image, color: color), onPressed: _pickImage),
+                          IconButton(icon: Icon(_isRecording ? Icons.stop : Icons.mic, color: _isRecording ? Colors.red : color), onPressed: _isRecording ? _stopRecording : _startRecording),
+                          IconButton(icon: Icon(Icons.add_task, color: color), onPressed: () {
+                            setState(() => _checklists.add(ChecklistItem(id: _uuid.v4(), title: '')));
+                            _onChanged();
+                          }),
+                          IconButton(
+                            icon: Icon(_isLocked ? Icons.lock : Icons.lock_open, color: color),
+                            onPressed: () async {
+                              bool authenticated = await AuthService.authenticate();
+                              if (authenticated) {
+                                setState(() => _isLocked = !_isLocked);
+                                _onChanged();
+                              }
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(_isPinned ? Icons.push_pin : Icons.push_pin_outlined, color: color),
+                            onPressed: () {
+                              setState(() => _isPinned = !_isPinned);
+                              _onChanged();
+                            },
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.mic, color: color),
-                        onPressed: _startRecording,
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
