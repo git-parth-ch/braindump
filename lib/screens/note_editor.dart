@@ -168,10 +168,11 @@ class _NoteEditorState extends State<NoteEditor> {
 
   void _autoSave() {
     if (!mounted) return;
-    _updateNoteInProvider();
+    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
+    _updateNoteInProvider(noteProvider);
   }
 
-  void _updateNoteInProvider() {
+  void _updateNoteInProvider(NoteProvider noteProvider) {
     if (_titleController.text.isEmpty && 
         _quillController.document.isEmpty() && 
         _imagePaths.isEmpty && 
@@ -180,7 +181,7 @@ class _NoteEditorState extends State<NoteEditor> {
       return;
     }
 
-    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
+
     final content = jsonEncode(_quillController.document.toDelta().toJson());
     
     final updatedNote = Note(
@@ -219,9 +220,9 @@ class _NoteEditorState extends State<NoteEditor> {
     super.dispose();
   }
 
-  void _saveNote({bool isExiting = false}) {
-    final hasContent = _titleController.text.isNotEmpty || 
-                      !_quillController.document.isEmpty() || 
+  void _saveNote(NoteProvider noteProvider, {bool isExiting = false}) {
+    final hasContent = _titleController.text.trim().isNotEmpty || 
+                      _quillController.document.toPlainText().trim().isNotEmpty || 
                       _imagePaths.isNotEmpty || 
                       _checklists.isNotEmpty || 
                       _audioPath != null;
@@ -231,7 +232,7 @@ class _NoteEditorState extends State<NoteEditor> {
       return;
     }
 
-    _updateNoteInProvider();
+    _updateNoteInProvider(noteProvider);
 
     if (!isExiting) Navigator.of(context).pop();
   }
@@ -291,7 +292,7 @@ class _NoteEditorState extends State<NoteEditor> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          _saveNote(isExiting: true);
+          _saveNote(noteProvider, isExiting: true);
         }
       },
       child: Scaffold(
@@ -301,7 +302,7 @@ class _NoteEditorState extends State<NoteEditor> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-            onPressed: () => _saveNote(),
+            onPressed: () => _saveNote(noteProvider),
           ),
           actions: [
             IconButton(
@@ -329,7 +330,7 @@ class _NoteEditorState extends State<NoteEditor> {
             ),
             IconButton(
               icon: const Icon(Icons.check, color: Colors.blueAccent, size: 28),
-              onPressed: () => _saveNote(),
+              onPressed: () => _saveNote(noteProvider),
             ),
             const SizedBox(width: 8),
           ],
@@ -566,6 +567,7 @@ class _NoteEditorState extends State<NoteEditor> {
   }
 
   Widget _buildRetroEditor(BuildContext context) {
+    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
     final color = const Color(0xFF00FF41);
     return Scaffold(
       backgroundColor: Colors.black,
@@ -579,7 +581,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   GestureDetector(
-                    onTap: () => _saveNote(),
+                    onTap: () => _saveNote(noteProvider),
                     child: Text('< EXIT.EXE', style: GoogleFonts.vt323(color: color, fontSize: 18)),
                   ),
                   Text('STATUS: WRITING...', style: GoogleFonts.vt323(color: color, fontSize: 14)),
@@ -614,7 +616,7 @@ class _NoteEditorState extends State<NoteEditor> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  PixelButton(text: 'SAVE', onTap: () => _saveNote(), color: color),
+                  PixelButton(text: 'SAVE', onTap: () => _saveNote(noteProvider), color: color),
                   Row(
                     children: [
                       IconButton(
